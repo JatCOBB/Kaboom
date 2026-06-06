@@ -7,22 +7,40 @@ const CELL = 20 // size of each grid cell in pixels
 const dir = { x: 1, y: 0 } // current movement direction (starts moving right)
 
 //SECTION - SNAKE HEAD
-const snake = add([
-    pos(5 * CELL, 9 * CELL), // starting position on the grid
-    rect(CELL, CELL),         // square the size of one cell
-    outline(4),               // border around the square
-    area(),
-    color(0, 255, 0),// hitbox (needed for collision later)
-    "snake", // tag to identify the snake in collisions
-])
 
+const segments = []
+const snakeBody = [
+    { x: 5, y: 9 },  // head
+    { x: 4, y: 9 },  // segment
+    { x: 3, y: 9 },  // tail
 
+] // array to hold the snake's body segments
+
+const drawSnake = () => {
+    segments.forEach(destroy) // remove old segments
+    segments.length = 0 // clear the segments array
+    snakeBody.forEach((segment) => {
+        const s = add([
+            pos(segment.x * CELL, segment.y * CELL),
+            rect(CELL, CELL),
+            color(0, 255, 0),
+            outline(4),
+            area(),
+            "snake",
+        ])
+        segments.push(s) // keep track of the new segment
+    })
+}
 //SECTION - MOVEMENT LOOP
 // moves the snake one cell in the current direction every 0.2 seconds
 loop(0.2, () => {
-    snake.pos.x += dir.x * CELL
-    snake.pos.y += dir.y * CELL
+    const head = snakeBody[0]
+    const newHead = { x: head.x + dir.x, y: head.y + dir.y }
+    snakeBody.unshift(newHead)
+    snakeBody.pop()
+    drawSnake()
 })
+
 
 //SECTION - INPUT
 // arrow keys update the direction, loop handles the actual movement
@@ -50,7 +68,9 @@ const spawnFood = () => {
 //SECTION - COLLISION 'FOOD'
 onCollide("snake", "food", (s, f) => {
     destroy(f) // remove the food
+    snakeBody.push({ ...snakeBody[snakeBody.length - 1] }) // add new segment at the tail
     spawnFood() // spawn new food
 })
 
+drawSnake()
 spawnFood()
